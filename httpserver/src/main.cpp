@@ -12,28 +12,37 @@ int main()
 	struct sockaddr_in addr;
 	char buf[1024];
 
-	conn = socket(AF_INET, SOCK_DGRAM, 0);
-	if (conn < 0)
+	listener = socket(AF_INET, SOCK_STREAM, 0);
+	if (listener < 0)
 	{
 		perror("socket");
 		exit(1);
 	}
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(2345);
-	addr.sin_addr.s_addr = htons(INADDR_ANY);
-	if (bind(listener, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	addr.sin_addr.s_addr = INADDR_ANY;//INADDR_LOOPBACK;//
+	int errBind = bind(listener, (struct sockaddr *)&addr, sizeof(addr));
+	if (errBind < 0)
 	{
-		perror("bind_");
+		close(listener);
+		perror("bind");
 		exit(2);
 	}
-	listen(listener, 1);
+	int errListen = listen(listener, 1);
+	if (errListen == -1)
+	{
+		close(listener);
+		perror("listen");
+		exit(3);
+	}
 	while (1)
 	{
-		conn = accept(listener, NULL, NULL);
+		conn = accept(listener, 0, 0);
 		if (conn < 0)
 		{
+			close(listener);
 			perror("accept");
-			exit(3);
+			exit(4);
 		}
 		while (1)
 		{
